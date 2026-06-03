@@ -1,5 +1,5 @@
 name: Release Maven Component
-run-name: Release ${{ inputs.explicit-version || inputs.version-type }} version of ${{ inputs.component }}.
+run-name: Release ${{ inputs.version-type }} version of ${{ inputs.component }}.
 on:
   workflow_dispatch:
     inputs:
@@ -42,6 +42,11 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Release Component
         id: release
@@ -61,6 +66,12 @@ jobs:
           maven-profile: ${{ inputs.publish-target }}
           update-parent-version: ${{ inputs.component == 'parent' && 'true' || 'false' }}
 
+      - name: "Upload all Maven target directories"
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ github.event.repository.name }}
+          path: "${{ github.event.repository.name }}/**/target" # Upload all target directories in the repository
+
       - name: Report Release
         if: success()
         run: |
@@ -71,3 +82,15 @@ jobs:
           echo "**Artifacts**: ${{ steps.release.outputs.artifacts }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/${{ inputs.component }}-${{ steps.release.outputs.release-version }})" >> $GITHUB_STEP_SUMMARY
+
+      - name: "Release-drafter"
+        if: ${{ inputs.dry-run && 'true' || 'false' }}
+        uses: netcracker/release-drafter@86f4276a3894b5af70480e826c32fe3648ac6a70  # v1.0.0
+        with:
+          config-name: release-drafter-config.yml
+          publish: true
+          name: ${{ inputs.component }}-${{ steps.release.outputs.release-version }}
+          tag: ${{ inputs.component }}-${{ steps.release.outputs.release-version }}
+          version: ${{ inputs.component }}-${{ steps.release.outputs.release-version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
