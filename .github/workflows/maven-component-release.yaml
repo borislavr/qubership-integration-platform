@@ -52,6 +52,7 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Release Component
+        id: release
         uses: netcracker/qubership-workflow-hub/actions/maven-monorepo-release@feature/mave-monorepo-release
         with:
           component: ${{ inputs.component }}
