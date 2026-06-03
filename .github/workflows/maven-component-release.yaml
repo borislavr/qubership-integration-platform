@@ -64,7 +64,7 @@ jobs:
           maven-central-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           maven-central-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           java-version: '21'
-          maven-profile: release
+          maven-profile: ${{ inputs.publish-target }}
           update-parent-version: ${{ inputs.component == 'parent' && 'true' || 'false' }}
 
       - name: Report Release
