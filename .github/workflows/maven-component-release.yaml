@@ -1,0 +1,79 @@
+name: Release Maven Component
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: 'Component to release (parent, bom, or component name)'
+        required: true
+        type: string
+      version-type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        default: patch
+        options:
+          - major
+          - minor
+          - patch
+      explicit-version:
+        description: 'Or specify explicit version (e.g., 1.2.3) to override version-type'
+        required: false
+        type: string
+      publish-target:
+        description: 'Publishing target'
+        required: true
+        type: choice
+        default: github
+        options:
+          - github
+          - central
+      dry-run:
+        description: 'Dry-run (validate build without pushing)'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine version
+        id: version
+        run: |
+          version="${{ inputs.explicit-version }}"
+          if [[ -z "$version" ]]; then
+            version="${{ inputs.version-type }}"
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Release Component
+        uses: netcracker/qubership-workflow-hub/actions/maven-monorepo-release@feature/mave-monorepo-release
+        with:
+          component: ${{ inputs.component }}
+          version-type: ${{ steps.version.outputs.version }}
+          publish-target: ${{ inputs.publish-target }}
+          dry-run: ${{ inputs.dry-run && 'true' || 'false' }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+          maven-central-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          maven-central-password: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          java-version: '21'
+          maven-profile: release
+          update-parent-version: ${{ inputs.component == 'parent' && 'true' || 'false' }}
+
+      - name: Report Release
+        if: success()
+        run: |
+          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Component**: ${{ inputs.component }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Released Version**: ${{ steps.release.outputs.release-version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifacts**: ${{ steps.release.outputs.artifacts }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/${{ inputs.component }}-${{ steps.release.outputs.release-version }})" >> $GITHUB_STEP_SUMMARY
