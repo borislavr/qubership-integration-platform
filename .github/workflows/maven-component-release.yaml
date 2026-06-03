@@ -1,5 +1,5 @@
 name: Release Maven Component
-
+run-name: Release ${{ inputs.explicit-version || inputs.version-type }} version of ${{ inputs.component }}.
 on:
   workflow_dispatch:
     inputs:
