@@ -1052,7 +1052,7 @@
                     <id>github</id>
                     <name>GitHub Packages</name>
                     <url>
-                        https://maven.pkg.github.com/Netcracker/qubership-integration-platform
+                        https://maven.pkg.github.com/borislavr/qubership-integration-platform
                     </url>
                 </repository>
             </distributionManagement>

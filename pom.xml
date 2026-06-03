@@ -42,7 +42,7 @@
         <repository>
             <id>github</id>
             <name>GitHub Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/Netcracker/qubership-integration-platform</url>
+            <url>https://maven.pkg.github.com/borislavr/qubership-integration-platform</url>
         </repository>
     </distributionManagement>
 
