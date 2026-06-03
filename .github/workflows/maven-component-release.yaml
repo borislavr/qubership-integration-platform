@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       component:
-        description: 'Component to release (parent, bom, or component name)'
+        description: 'Component to release'
         required: true
         type: string
       version-type:
@@ -16,8 +16,8 @@ on:
           - major
           - minor
           - patch
-      explicit-version:
-        description: 'Or specify explicit version (e.g., 1.2.3) to override version-type'
+      version-property:
+        description: "If version of component is stored in property, provide it's name"
         required: false
         type: string
       publish-target:
@@ -42,21 +42,14 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Determine version
-        id: version
-        run: |
-          version="${{ inputs.explicit-version }}"
-          if [[ -z "$version" ]]; then
-            version="${{ inputs.version-type }}"
-          fi
-          echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Release Component
         id: release
         uses: netcracker/qubership-workflow-hub/actions/maven-monorepo-release@feature/mave-monorepo-release
         with:
           component: ${{ inputs.component }}
-          version-type: ${{ steps.version.outputs.version }}
+          version-type: ${{ inputs.version-type }}
+          version-property: ${{ inputs.version-property }}
           publish-target: ${{ inputs.publish-target }}
           dry-run: ${{ inputs.dry-run && 'true' || 'false' }}
           token: ${{ secrets.GITHUB_TOKEN }}
